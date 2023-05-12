@@ -50,7 +50,7 @@ export const parseOpenAIStream = (rawResponse: Response) => {
           });
 
         for (const j of jsons) {
-          controller.enqueue(encoder.encode(j.choices[0].text));
+          controller.enqueue(encoder.encode(JSON.parse(j).choices[0].text));
         }
       }
       controller.close();
