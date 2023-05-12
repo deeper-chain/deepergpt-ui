@@ -1,15 +1,18 @@
-import { createParser } from 'eventsource-parser'
-import type { ParsedEvent, ReconnectInterval } from 'eventsource-parser'
-import type { ChatMessage } from '@/types'
+import { createParser } from "eventsource-parser";
+import type { ParsedEvent, ReconnectInterval } from "eventsource-parser";
+import type { ChatMessage } from "@/types";
 
-export const model = import.meta.env.OPENAI_API_MODEL || 'gpt-3.5-turbo'
+export const model = import.meta.env.OPENAI_API_MODEL || "gpt-3.5-turbo";
 
-export const generatePayload = (apiKey: string, messages: ChatMessage[]): RequestInit & { dispatcher?: any } => ({
+export const generatePayload = (
+  apiKey: string,
+  messages: ChatMessage[]
+): RequestInit & { dispatcher?: any } => ({
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
   },
-  method: 'POST',
+  method: "POST",
   /*
   body: JSON.stringify({
     model,
@@ -18,43 +21,41 @@ export const generatePayload = (apiKey: string, messages: ChatMessage[]): Reques
     stream: true,
   }),*/
   body: JSON.stringify({
-    prompt: messages[messages.length-1].content
+    prompt: messages[messages.length - 1].content,
   }),
-})
+});
 
 export const parseOpenAIStream = (rawResponse: Response) => {
-  const encoder = new TextEncoder()
-  const decoder = new TextDecoder()
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
   if (!rawResponse.ok) {
     return new Response(rawResponse.body, {
       status: rawResponse.status,
       statusText: rawResponse.statusText,
-    })
+    });
   }
 
   const stream = new ReadableStream({
     async start(controller) {
-      
-      for await (const chunk of rawResponse.body as any)
-      {
-        const jsons = decoder.decode(chunk).split("}{").map(token=>{
-          if (token[token.length-1]=="}"){
-              return `{${token}`
-          }else{
-              return `${token}}`
-          }
-        });
-        
-        for (const json of jsons){
-            controller.enqueue(json)
-        }
-        
-        console.log(decoder.decode(chunk))
-        controller.enqueue(encoder.encode(JSON.parse(decoder.decode(chunk)).choices[0].text))
-      }
-      controller.close()
-    },
-  })
+      for await (const chunk of rawResponse.body as any) {
+        const jsons = decoder
+          .decode(chunk)
+          .split("}{")
+          .map((token) => {
+            if (token[token.length - 1] == "}") {
+              return `{${token}`;
+            } else {
+              return `${token}}`;
+            }
+          });
 
-  return new Response(stream)
-}
+        for (const j of jsons) {
+          controller.enqueue(encoder.encode(j.choices[0].text));
+        }
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream);
+};
