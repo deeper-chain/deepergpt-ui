@@ -34,24 +34,27 @@ export const parseOpenAIStream = (rawResponse: Response) => {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const jsonRegex = /{.*?}/g;
-
-      for await (const chunk of rawResponse.body as any) {
-        const decodedChunk = decoder.decode(chunk);
-        const jsonStrings = decodedChunk.match(jsonRegex);
-
-        if (jsonStrings) {
-          for (const jsonString of jsonStrings) {
-            const jsonObject = JSON.parse(jsonString);
-            if (jsonObject.choices && jsonObject.choices[0] && jsonObject.choices[0].text) {
-              controller.enqueue(encoder.encode(jsonObject.choices[0].text));
-            }
+      
+      for await (const chunk of rawResponse.body as any)
+      {
+        const jsons = decoder.decode(chunk).split("}{").map(token=>{
+          if (token[token.length-1]=="}"){
+              return `{${token}`
+          }else{
+              return `${token}}`
           }
+        });
+        
+        for (const json of jsons){
+            controller.enqueue(json)
         }
+        
+        console.log(decoder.decode(chunk))
+        controller.enqueue(encoder.encode(JSON.parse(decoder.decode(chunk)).choices[0].text))
       }
-      controller.close();
+      controller.close()
     },
-  });
+  })
 
   return new Response(stream)
 }
