@@ -37,13 +37,15 @@ export const post: APIRoute = async(context) => {
   }
   const initOptions = generatePayload(apiKey, messages)
   // #vercel-disable-blocks
+  console.log(initOptions)
   if (httpsProxy)
     initOptions.dispatcher = new ProxyAgent(httpsProxy)
   // #vercel-end
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
-  const response = await fetch(`${baseUrl}/v1/chat/completions`, initOptions).catch((err: Error) => {
+  //const response = await fetch(`${baseUrl}/v1/chat/completions`, initOptions).catch((err: Error) => {
+  const response = await fetch(`http://157.230.219.51/generate`, initOptions).catch((err: Error) => {
     console.error(err)
     return new Response(JSON.stringify({
       error: {

@@ -10,11 +10,15 @@ export const generatePayload = (apiKey: string, messages: ChatMessage[]): Reques
     'Authorization': `Bearer ${apiKey}`,
   },
   method: 'POST',
+  /*
   body: JSON.stringify({
     model,
     messages,
     temperature: 0.6,
     stream: true,
+  }),*/
+  body: JSON.stringify({
+    prompt: messages[messages.length-1].content
   }),
 })
 
@@ -30,38 +34,24 @@ export const parseOpenAIStream = (rawResponse: Response) => {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const streamParser = (event: ParsedEvent | ReconnectInterval) => {
-        if (event.type === 'event') {
-          const data = event.data
-          if (data === '[DONE]') {
-            controller.close()
-            return
-          }
-          try {
-            // response = {
-            //   id: 'chatcmpl-6pULPSegWhFgi0XQ1DtgA3zTa1WR6',
-            //   object: 'chat.completion.chunk',
-            //   created: 1677729391,
-            //   model: 'gpt-3.5-turbo-0301',
-            //   choices: [
-            //     { delta: { content: '你' }, index: 0, finish_reason: null }
-            //   ],
-            // }
-            const json = JSON.parse(data)
-            const text = json.choices[0].delta?.content || ''
-            const queue = encoder.encode(text)
-            controller.enqueue(queue)
-          } catch (e) {
-            controller.error(e)
+      const jsonRegex = /{.*?}/g;
+
+      for await (const chunk of rawResponse.body as any) {
+        const decodedChunk = decoder.decode(chunk);
+        const jsonStrings = decodedChunk.match(jsonRegex);
+
+        if (jsonStrings) {
+          for (const jsonString of jsonStrings) {
+            const jsonObject = JSON.parse(jsonString);
+            if (jsonObject.choices && jsonObject.choices[0] && jsonObject.choices[0].text) {
+              controller.enqueue(encoder.encode(jsonObject.choices[0].text));
+            }
           }
         }
       }
-
-      const parser = createParser(streamParser)
-      for await (const chunk of rawResponse.body as any)
-        parser.feed(decoder.decode(chunk))
+      controller.close();
     },
-  })
+  });
 
   return new Response(stream)
 }
