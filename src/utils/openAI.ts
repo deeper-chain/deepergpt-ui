@@ -40,13 +40,13 @@ export const parseOpenAIStream = (rawResponse: Response) => {
       for await (const chunk of rawResponse.body as any) {
         const s = decoder.decode(chunk);
         if (s.lastIndexOf("}{") !== -1) {
-          const jsons = s.split("}{").map((token) => {
-            if (token[token.length - 1] == "}") {
-              return `{${token}`;
-            } else {
-              return `${token}}`;
-            }
-          });
+          const jsons = s
+            .split('text-davinci-003"}')
+            .map((token) => token.trim())
+            .filter(Boolean)
+            .map((token) => {
+              return `${token} text-davinci-003"}`;
+            });
 
           for (const j of jsons) {
             controller.enqueue(encoder.encode(JSON.parse(j).choices[0].text));
