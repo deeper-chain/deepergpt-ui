@@ -37,7 +37,6 @@ export const post: APIRoute = async(context) => {
   }
   const initOptions = generatePayload(apiKey, messages)
   // #vercel-disable-blocks
-  console.log(initOptions)
   if (httpsProxy)
     initOptions.dispatcher = new ProxyAgent(httpsProxy)
   // #vercel-end
