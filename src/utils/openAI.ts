@@ -25,9 +25,11 @@ export const generatePayload = (
   }),
 });
 
+// Function to parse the OpenAI API response stream
 export const parseOpenAIStream = (rawResponse: Response) => {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
+  const textEncoder = new TextEncoder();
+  const textDecoder = new TextDecoder();
+
   if (!rawResponse.ok) {
     return new Response(rawResponse.body, {
       status: rawResponse.status,
@@ -35,12 +37,15 @@ export const parseOpenAIStream = (rawResponse: Response) => {
     });
   }
 
-  const stream = new ReadableStream({
+  const parsedStream = new ReadableStream({
     async start(controller) {
+      // Iterate through the response body stream
       for await (const chunk of rawResponse.body as any) {
-        const s = decoder.decode(chunk);
-        if (s.lastIndexOf("}{") !== -1) {
-          const jsons = s
+        const decodedChunk = textDecoder.decode(chunk);
+
+        // Check if there are multiple JSON objects in the chunk
+        if (decodedChunk.lastIndexOf("}{") !== -1) {
+          const jsonTokens = decodedChunk
             .split('text-davinci-003"}')
             .map((token) => token.trim())
             .filter(Boolean)
@@ -48,16 +53,19 @@ export const parseOpenAIStream = (rawResponse: Response) => {
               return `${token} text-davinci-003"}`;
             });
 
-          for (const j of jsons) {
-            controller.enqueue(encoder.encode(JSON.parse(j).choices[0].text));
+          // Enqueue the text from each JSON object to the parsed stream
+          for (const jsonToken of jsonTokens) {
+            controller.enqueue(textEncoder.encode(JSON.parse(jsonToken).choices[0].text));
           }
         } else {
-          controller.enqueue(encoder.encode(JSON.parse(s).choices[0].text));
+          // Enqueue the text from the JSON object to the parsed stream
+          controller.enqueue(textEncoder.encode(JSON.parse(decodedChunk).choices[0].text));
         }
       }
       controller.close();
     },
   });
 
-  return new Response(stream);
+  // Return the parsed stream as a new response
+  return new Response(parsedStream);
 };
