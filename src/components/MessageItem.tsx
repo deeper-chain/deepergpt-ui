@@ -16,9 +16,9 @@ interface Props {
 
 export default ({ role, message, showRetry, onRetry }: Props) => {
   const roleClass = {
-    system: 'bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300',
-    user: 'bg-gradient-to-r from-purple-400 to-yellow-400',
-    assistant: 'bg-gradient-to-r from-yellow-200 via-green-200 to-green-300',
+    system: '../../public/bot.png',
+    user: '../../public/user.jpg',
+    assistant: '../../public/bot.png',
   }
   const [source] = createSignal('')
   const { copy, copied } = useClipboard({ source, copiedDuring: 1000 })
@@ -71,7 +71,7 @@ export default ({ role, message, showRetry, onRetry }: Props) => {
   return (
     <div class="py-2 -mx-4 px-4 transition-colors md:hover:bg-slate/3">
       <div class="flex gap-3 rounded-lg" class:op-75={role === 'user'}>
-        <div class={`shrink-0 w-7 h-7 mt-4 rounded-full op-80 ${roleClass[role]}`} />
+        <img class="shrink-0 w-7 h-7 mt-4 rounded-full op-80" src={roleClass[role]} alt={`${role} logo`} />
         <div class="message prose break-words overflow-hidden" innerHTML={htmlString()} />
       </div>
       {showRetry?.() && onRetry && (
