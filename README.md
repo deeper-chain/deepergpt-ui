@@ -23,7 +23,7 @@ More info on https://github.com/ddiu8081/chatgpt-demo/discussions/247.
 ### Pre environment
 1. **Node**: Check that both your development environment and deployment environment are using `Node v18` or later. You can use [nvm](https://github.com/nvm-sh/nvm) to manage multiple `node` versions locally。
    ```bash
-    node -v
+    node -v 
    ```
 2. **PNPM**: We recommend using [pnpm](https://pnpm.io/) to manage dependencies. If you have never installed pnpm, you can install it with the following command:
    ```bash
