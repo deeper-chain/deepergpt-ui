@@ -53,13 +53,19 @@ export const parseOpenAIStream = (rawResponse: Response) => {
               return `${token} text-davinci-003"}`;
             });
 
-          // Enqueue the text from each JSON object to the parsed stream
+          // Enqueue the text from each JSON object to the parsed stream if it's not a null character
           for (const jsonToken of jsonTokens) {
-            controller.enqueue(textEncoder.encode(JSON.parse(jsonToken).choices[0].text));
+            const text = JSON.parse(jsonToken).choices[0].text;
+            if (text !== '\0') {
+              controller.enqueue(textEncoder.encode(text));
+            }
           }
         } else {
-          // Enqueue the text from the JSON object to the parsed stream
-          controller.enqueue(textEncoder.encode(JSON.parse(decodedChunk).choices[0].text));
+          // Enqueue the text from the JSON object to the parsed stream if it's not a null character
+          const text = JSON.parse(decodedChunk).choices[0].text;
+          if (text !== '\0') {
+            controller.enqueue(textEncoder.encode(text));
+          }
         }
       }
       controller.close();
