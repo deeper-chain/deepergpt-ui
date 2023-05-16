@@ -16,9 +16,9 @@ interface Props {
 
 export default ({ role, message, showRetry, onRetry }: Props) => {
   const roleClass = {
-    system: '../../public/bot.png',
-    user: '../../public/user.jpg',
-    assistant: '../../public/bot.png',
+    system: '../../bot.png',
+    user: '../../user.jpg',
+    assistant: '../../bot.png',
   }
   const [source] = createSignal('')
   const { copy, copied } = useClipboard({ source, copiedDuring: 1000 })
@@ -70,10 +70,25 @@ export default ({ role, message, showRetry, onRetry }: Props) => {
 
   return (
     <div class="py-2 -mx-4 px-4 transition-colors md:hover:bg-slate/3">
-      <div class="flex gap-3 rounded-lg" class:op-75={role === 'user'}>
-        <img class="shrink-0 w-7 h-7 mt-4 rounded-full op-80" src={roleClass[role]} alt={`${role} logo`} />
-        <div class="message prose break-words overflow-hidden" innerHTML={htmlString()} />
-      </div>
+    <div
+      class={`flex gap-3 rounded-lg items-start ${role === 'user' ? 'justify-end op-75' : ''}`}
+    >
+      {role === 'assistant' && (
+        <img
+          class="shrink-0 w-12 h-12 mt-4 rounded-full"
+          src={roleClass[role]}
+          alt={`${role} logo`}
+        />
+      )}
+      <div class="message prose break-words overflow-hidden" innerHTML={htmlString()} />
+      {role === 'user' && (
+        <img
+          class="shrink-0 w-12 h-12 mt-2 rounded-full op-95"
+          src={roleClass[role]}
+          alt={`${role} logo`}
+        />
+      )}
+    </div>
       {showRetry?.() && onRetry && (
         <div class="fie px-3 mb-2">
           <div onClick={onRetry} class="gpt-retry-btn">
