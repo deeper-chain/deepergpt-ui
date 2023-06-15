@@ -96,7 +96,6 @@ export default () => {
         })
       }
       const timestamp = Date.now()
-      console.log("user prompt is: ", requestMessageList)
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
