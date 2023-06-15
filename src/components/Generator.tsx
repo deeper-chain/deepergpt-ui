@@ -55,7 +55,8 @@ export default () => {
   }
 
   const handleButtonClick = async() => {
-    const inputValue = inputRef.value
+    let inputValue = inputRef.value
+    inputValue = inputValue.replace(/\n+/g, '\n').trim();
     if (!inputValue)
       return
 
@@ -95,15 +96,19 @@ export default () => {
         })
       }
       const timestamp = Date.now()
+      console.log("user prompt is: ", requestMessageList)
       const response = await fetch('/api/generate', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'  // ensure proper charset
+        },
         body: JSON.stringify({
-          messages: requestMessageList,
+          messages: requestMessageList.map(message => ({...message, content: encodeURIComponent(message.content)})),  // ensure content is URI encoded
           time: timestamp,
           pass: storagePassword,
           sign: await generateSignature({
             t: timestamp,
-            m: requestMessageList?.[requestMessageList.length - 1]?.content || '',
+            m: encodeURIComponent(requestMessageList?.[requestMessageList.length - 1]?.content || ''),  // ensure content is URI encoded
           }),
         }),
         signal: controller.signal,
