@@ -46,23 +46,25 @@ export const parseOpenAIStream = (rawResponse: Response) => {
         // Check if there are multiple JSON objects in the chunk
         if (decodedChunk.lastIndexOf("}{") !== -1) {
           const jsonTokens = decodedChunk
-            .split('text-davinci-003"}')
+            .split('gpt-3.5-turbo-16k-0613"}')
             .map((token) => token.trim())
             .filter(Boolean)
             .map((token) => {
-              return `${token} text-davinci-003"}`;
+              return `${token} gpt-3.5-turbo-16k-0613"}`;
             });
+
+          console.log("result: ", jsonTokens)
 
           // Enqueue the text from each JSON object to the parsed stream if it's not a null character
           for (const jsonToken of jsonTokens) {
-            const text = JSON.parse(jsonToken).choices[0]['delta']['content'];
+            const text = JSON.parse(jsonToken).choices[0].delta.content;
             if (text !== '\0') {
               controller.enqueue(textEncoder.encode(text));
             }
           }
         } else {
           // Enqueue the text from the JSON object to the parsed stream if it's not a null character
-          const text = JSON.parse(decodedChunk).choices[0]['delta']['content'];
+          const text = JSON.parse(decodedChunk).choices[0].delta.content;
           if (text !== '\0') {
             controller.enqueue(textEncoder.encode(text));
           }
