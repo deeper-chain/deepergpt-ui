@@ -46,14 +46,19 @@ export const parseOpenAIStream = (rawResponse: Response) => {
         // Check if there are multiple JSON objects in the chunk
         if (decodedChunk.lastIndexOf("}{") !== -1) {
           const jsonTokens = decodedChunk
-            .split('gpt-3.5-turbo-16k-0613"}')
+            .split('}{')
+            .map((token, index, tokensArray) => {
+              if (index !== 0) {
+                token = "{" + token;
+              }
+              if (index !== tokensArray.length - 1) {
+                token = token + "}";
+              }
+              return `${token}`;
+            })
             .map((token) => token.trim())
-            .filter(Boolean)
-            .map((token) => {
-              return `${token} gpt-3.5-turbo-16k-0613"}`;
-            });
-
-          console.log("result: ", jsonTokens)
+            .filter(Boolean);
+        
 
           // Enqueue the text from each JSON object to the parsed stream if it's not a null character
           for (const jsonToken of jsonTokens) {
