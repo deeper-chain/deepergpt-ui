@@ -55,14 +55,14 @@ export const parseOpenAIStream = (rawResponse: Response) => {
 
           // Enqueue the text from each JSON object to the parsed stream if it's not a null character
           for (const jsonToken of jsonTokens) {
-            const text = JSON.parse(jsonToken).choices[0].text;
+            const text = JSON.parse(jsonToken).choices[0]['delta']['content'];
             if (text !== '\0') {
               controller.enqueue(textEncoder.encode(text));
             }
           }
         } else {
           // Enqueue the text from the JSON object to the parsed stream if it's not a null character
-          const text = JSON.parse(decodedChunk).choices[0].text;
+          const text = JSON.parse(decodedChunk).choices[0]['delta']['content'];
           if (text !== '\0') {
             controller.enqueue(textEncoder.encode(text));
           }
