@@ -34,9 +34,6 @@ export const parseOpenAIStream = (rawResponse: Response) => {
     async start(controller) {
       for await (const chunk of rawResponse.body as any) {
         const decodedChunk = textDecoder.decode(chunk, { stream: true });
-
-        console.log("decodedChunk: ", decodedChunk);
-
         const regex = /"content":\s*"(.*?)"/g;
         let match;
         while ((match = regex.exec(decodedChunk)) !== null) {
@@ -44,7 +41,6 @@ export const parseOpenAIStream = (rawResponse: Response) => {
           text = text.replace(/\\n/g, "\n");
           text = decodeUnicode(text);
           if (text !== '\0') {
-            console.log("text: ", text);
             controller.enqueue(textEncoder.encode(text));
           }
         }
