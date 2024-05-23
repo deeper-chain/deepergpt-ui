@@ -21,7 +21,7 @@ export const generatePayload = (
 // Function to parse the OpenAI API response stream
 export const parseOpenAIStream = (rawResponse: Response) => {
   const textEncoder = new TextEncoder();
-  const textDecoder = new TextDecoder();
+  const textDecoder = new TextDecoder("utf-8");
 
   if (!rawResponse.ok) {
     return new Response(rawResponse.body, {
@@ -32,17 +32,19 @@ export const parseOpenAIStream = (rawResponse: Response) => {
 
   const parsedStream = new ReadableStream({
     async start(controller) {
-      let buffer = "";
-
       for await (const chunk of rawResponse.body as any) {
         const decodedChunk = textDecoder.decode(chunk, { stream: true });
+
+        console.log("decodedChunk: ", decodedChunk);
 
         const regex = /"content":\s*"(.*?)"/g;
         let match;
         while ((match = regex.exec(decodedChunk)) !== null) {
           let text = match[1];
           text = text.replace(/\\n/g, "\n");
+          text = decodeUnicode(text);
           if (text !== '\0') {
+            console.log("text: ", text);
             controller.enqueue(textEncoder.encode(text));
           }
         }
@@ -52,4 +54,11 @@ export const parseOpenAIStream = (rawResponse: Response) => {
   });
 
   return new Response(parsedStream);
+};
+
+// Function to decode Unicode escape sequences
+const decodeUnicode = (str: string) => {
+  return str.replace(/\\u[\dA-F]{4}/gi, (match) => {
+    return String.fromCharCode(parseInt(match.replace(/\\u/g, ""), 16));
+  });
 };
