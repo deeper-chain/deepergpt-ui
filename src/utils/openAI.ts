@@ -35,7 +35,7 @@ export const parseOpenAIStream = (rawResponse: Response) => {
       for await (const chunk of rawResponse.body as any) {
         const decodedChunk = textDecoder.decode(chunk, { stream: true });
         const regex = /"content":\s*"(.*?)"/g;
-        let match;
+        let match: RegExpExecArray | null;
         while ((match = regex.exec(decodedChunk)) !== null) {
           let text = match[1];
           text = text.replace(/\\n/g, "\n");
